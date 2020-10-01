@@ -9,7 +9,10 @@ struct PlayingCard: Hashable {
     let suit: Character
     let isFace: Bool
     let uniqueIndex: Int
+    lazy var report: String = rank + String(suit)
 }
+
+// [[Int]] players hands, [Int] players (for maintaining consistency in players through indexing fo hands through here
 
 struct GameState {
     let players: Int
@@ -103,7 +106,7 @@ class DeckBuilder {
     ///Cards are dealt from the 'bottom' of the stack with .popLast()
     func deal(handOf handSize: Int, fromStock stock: inout [Int]) -> [Int] {
         var newHand: [Int] = []
-        while newHand.count < (handSize - 1) {
+        while newHand.count < (handSize) {
             if let dealtCard = stock.popLast() {
                 newHand.append(dealtCard)
             }
@@ -121,6 +124,21 @@ class DeckBuilder {
         let uniqueID = hand[index] // reminder: cards are tracked by unique ID and hashed into the Deck for readable values
         hand.remove(at: index)
         discardPile.append(uniqueID)
+    }
+    
+    // Disgnostics
+    func displayAsReport(cardID id: Int, inDeck deck: DeckStandard) -> String {
+        guard var card = deck[id] else { return "Error" }
+        let report = card.report
+        return report
+    }
+    
+    func report(fromPile pile: [Int], hashedToDeck deck: DeckStandard) -> [String] {
+        var hashedPile: [String] = []
+        for i in 0..<pile.count {
+            hashedPile.append(displayAsReport(cardID: pile[i], inDeck: deck))
+        }
+        return hashedPile
     }
 }
 
@@ -233,10 +251,15 @@ class GameEnvironment {
     func setup(numberOfPlayers players: Int) {
         let standardDeck = DeckBuilder().constructDeck()
         var shuffledStock = DeckBuilder().randomize()
-        let dealtHand = DeckBuilder().deal(handOf: 5, fromStock: &shuffledStock)
-        gameState = GameState(players: players, deck: standardDeck, stock: shuffledStock, hand: dealtHand, discardPile: [Int](), revealedCards: [Int]())
+        gameState = GameState(players: players, deck: standardDeck, stock: shuffledStock, hand: [Int()], discardPile: [Int](), revealedCards: [Int]())
+        guard let gameState = gameState else { return }
+        printAllZones(ofGameState: gameState)
+//        DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
     }
-    
+    func dealHand(ofNumber cards: Int, fromStock stock: inout [Int]) -> [Int] {
+        return DeckBuilder().deal(handOf: 5, fromStock: &stock)
+        
+    }
     // game loop
     
     // function evaluates hand and returns a score (score tracking comes later)
@@ -268,21 +291,30 @@ class GameEnvironment {
     // MARK: - Check GameState values
     
     func printHand(ofGameState gameState: GameState) {
+        Swift.print("Hand:")
         Swift.print(gameState.hand)
     }
     
     func printStock(ofGameState gameState: GameState) {
+        Swift.print("Stock:")
         Swift.print(gameState.stock)
     }
     
     func printDiscardPile(ofGameState gameState: GameState) {
+        Swift.print("DiscardPile:")
         Swift.print(gameState.discardPile)
     }
     
     func printAllZones(ofGameState gameState: GameState) {
-        printHand(ofGameState: gameState)
-        printStock(ofGameState: gameState)
-        printDiscardPile(ofGameState: gameState)
+        print("Hand:")
+        print(DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck))
+        print("DiscardPile:")
+        print(DeckBuilder().report(fromPile: gameState.discardPile, hashedToDeck: gameState.deck))
+        print("Stock:")
+        print(DeckBuilder().report(fromPile: gameState.stock, hashedToDeck: gameState.deck))
+//        printHand(ofGameState: gameState)
+//        printStock(ofGameState: gameState)
+//        printDiscardPile(ofGameState: gameState)
     }
     
     func checkDeckIntegrity(ofGameState gameState: GameState) -> Bool {
@@ -303,7 +335,33 @@ class GameEnvironment {
         return checkDeck.isEmpty
     }
     
+    // Instances
+    
+    func instance1() {
+        let deckBuilder = DeckBuilder()
+        guard var gameState = gameState else { return }
+        var hand = deckBuilder.deal(handOf: 5, fromStock: &gameState.stock)
+        gameState.hand = hand
+        deckBuilder.report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
+        printHand(ofGameState: gameState)
+        deckBuilder.draw(thisManyCards: 1, toHand: &gameState.hand, fromStock: &gameState.stock)
+        printHand(ofGameState: gameState)
+        deckBuilder.draw(thisManyCards: 2, toHand: &gameState.hand, fromStock: &gameState.stock)
+        printHand(ofGameState: gameState)
+        deckBuilder.discard(cardWithLocalID: 0, fromHand: &gameState.hand, toDiscardPile: &gameState.discardPile)
+        printHand(ofGameState: gameState)
+        printDiscardPile(ofGameState: gameState)
+        printStock(ofGameState: gameState)
+        printAllZones(ofGameState: gameState)
+    }
+    
     // Zones
     
     var gameState: GameState?
 }
+
+
+let gameEnvironment = GameEnvironment()
+gameEnvironment.setup(numberOfPlayers: 1)
+gameEnvironment.instance1()
+
