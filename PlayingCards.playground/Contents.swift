@@ -9,7 +9,7 @@ struct PlayingCard: Hashable {
     let suit: Character
     let isFace: Bool
     let uniqueIndex: Int
-    lazy var report: String = rank + String(suit)
+    var report: String { rank + String(suit) }
 }
 
 // [[Int]] players hands, [Int] players (for maintaining consistency in players through indexing fo hands through here
@@ -24,6 +24,17 @@ struct GameState {
     var hands: [[Int]]
     var discardPile: [Int]
     var revealedCards: [Int]
+    
+    var cardsNotInStock: Set<Int> {
+        var piles: Set<Int> = []
+        var i = 0
+        while i < players {
+            piles.formUnion(Set(hands[i]))
+            i += 1
+        }
+        piles.formUnion(Set(discardPile))
+        return piles
+    }
 }
 
 
@@ -85,9 +96,9 @@ class DeckBuilder {
         return deckAccumulator
     }
     
-    func randomize() -> [Int] {
+    func randomize(withoutIDs ids: Set<Int> = []) -> [Int] {
         var newStock: [Int] = []
-        var setOfChosenNumbers: Set<Int> = []
+        var setOfChosenNumbers: Set<Int> = ids
         var nonce = Int.random(in: 0...51)
         
         while newStock.count < 52 {
@@ -398,6 +409,10 @@ class GameHandlerForDraw5Poker {
 //        print(DeckBuilder().report(fromPile: gameState!.hands[0], hashedToDeck: gameState!.deck))
     }
     
+    func testGameFlow() {
+//        exchange(cards: <#T##Int#>, withIDs: <#T##[Int]#>, inGameState: &<#T##GameState#>)
+    }
+    
     func dealHands(thisManyCards cards: Int) {
         var i = 0
         guard var gs = gameState else { return }
@@ -415,15 +430,16 @@ class GameHandlerForDraw5Poker {
         gameState.activePlayer = (nextPlayerIndex >= gameState.players ? nextPlayerIndex :  0)
         // draw cards
     }
+    func exchange(cards: Int, withIDs ids: [Int], inGameState gs: inout GameState) {
+        let ap = gs.activePlayer
+        var apHand = gs.hands[ap]
+        for id in ids {
+            DeckBuilder().discard(cardWithLocalID: id, fromHand: &apHand, toDiscardPile: &gs.discardPile)
+        }
+        DeckBuilder().draw(thisManyCards: cards, toHand: &apHand, fromPile: &gs.stock)
+        advanceTurn(ofGameState: &gs)
+    }
 }
 
-//let gh = GameHandlerForDraw5Poker()
-let db = DeckBuilder()
-db.randomize()
-db.randomize()
-db.randomize()
-db.randomize()
-db.randomize()
-db.randomize()
-db.randomize()
+let gh = GameHandlerForDraw5Poker()
 
