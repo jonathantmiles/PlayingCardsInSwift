@@ -96,8 +96,8 @@ class DeckBuilder {
                 newStock.append(nonce)
                 nonce = Int.random(in: 0...51)
             } else {
-                nonce += 1
-                if nonce > 51 { nonce = 0 }
+                nonce += Int.random(in: 0...25)
+                if nonce > 51 { nonce -= 52 }
             }
         }
         
@@ -417,4 +417,13 @@ class GameHandlerForDraw5Poker {
     }
 }
 
-let gh = GameHandlerForDraw5Poker()
+//let gh = GameHandlerForDraw5Poker()
+let db = DeckBuilder()
+db.randomize()
+db.randomize()
+db.randomize()
+db.randomize()
+db.randomize()
+db.randomize()
+db.randomize()
+
