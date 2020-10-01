@@ -141,6 +141,14 @@ class DeckBuilder {
         }
         return hashedPile
     }
+    
+    func report(fromPiles piles: [[Int]], hashedToDeck deck: DeckStandard) -> [[String]] {
+        var hashedPiles: [[String]] = []
+        while hashedPiles.count < piles.count {
+            hashedPiles.append(report(fromPile: piles[hashedPiles.count], hashedToDeck: deck))
+        }
+        return hashedPiles
+    }
 }
 
 // MARK: - Testing
@@ -388,7 +396,7 @@ class GameHandlerForDraw5Poker {
     //        DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
         dealHands(thisManyCards: 5)
 //        print(DeckBuilder().report(fromPile: gameState!.hands[0], hashedToDeck: gameState!.deck))
-        }
+    }
     
     func dealHands(thisManyCards cards: Int) {
         var i = 0
@@ -398,8 +406,8 @@ class GameHandlerForDraw5Poker {
             gs.hands[i] = dealtHand
             i += 1
         }
-        print(DeckBuilder().report(fromPile: gs.hands[0], hashedToDeck: gs.deck))
-        print(DeckBuilder().report(fromPile: gs.hands[1], hashedToDeck: gs.deck))
+        print(DeckBuilder().report(fromPiles: gs.hands, hashedToDeck: gs.deck))
+//        print(DeckBuilder().report(fromPile: gs.hands[1], hashedToDeck: gs.deck))
     }
     // turn structure (including changing active player)
     func advanceTurn(ofGameState gameState: inout GameState) {
