@@ -19,6 +19,7 @@ struct GameState {
     let deck: DeckStandard
     // let cardStandard: CardStandard // enum type declaration for type of card
     
+    var activePlayer: Int
     var stock: [Int]
     var hands: [[Int]]
     var discardPile: [Int]
@@ -254,7 +255,7 @@ class GameEnvironment {
         var handsConfigured = [[Int()]]
         let dealtHand = DeckBuilder().deal(handOf: 5, fromStock: &shuffledStock)
         handsConfigured[0] = dealtHand
-        gameState = GameState(players: players, deck: standardDeck, stock: shuffledStock, hands: handsConfigured, discardPile: [Int](), revealedCards: [Int]())
+        gameState = GameState(players: players, deck: standardDeck, activePlayer: 0, stock: shuffledStock, hands: handsConfigured, discardPile: [Int](), revealedCards: [Int]())
         guard var gameState = gameState else { return }
         printAllZones(ofGameState: gameState)
 //        DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
@@ -366,7 +367,46 @@ class GameEnvironment {
 }
 
 
-let gameEnvironment = GameEnvironment()
-gameEnvironment.setup(numberOfPlayers: 1)
-gameEnvironment.instance1()
+//let gameEnvironment = GameEnvironment()
+//gameEnvironment.setup(numberOfPlayers: 1)
+//gameEnvironment.instance1()
 
+class GameHandlerForDraw5Poker {
+    
+    init() {
+        setup(numberOfPlayers: 2)
+    }
+    var gameState: GameState?
+    // initialize gameState
+    func setup(numberOfPlayers players: Int) {
+        let standardDeck = DeckBuilder().constructDeck()
+        var shuffledStock = DeckBuilder().randomize()
+        var handsConfigured = Array(repeating: Array(repeating: 0, count: 5), count: players)
+//        let dealtHand = [0, 1, 2, 3, 4]
+//        handsConfigured[0] = dealtHand
+        gameState = GameState(players: players, deck: standardDeck, activePlayer: 0, stock: shuffledStock, hands: handsConfigured, discardPile: [Int](), revealedCards: [Int]())
+    //        DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
+        dealHands(thisManyCards: 5)
+//        print(DeckBuilder().report(fromPile: gameState!.hands[0], hashedToDeck: gameState!.deck))
+        }
+    
+    func dealHands(thisManyCards cards: Int) {
+        var i = 0
+        guard var gs = gameState else { return }
+        while i < gs.players {
+            let dealtHand = DeckBuilder().deal(handOf: cards, fromStock: &gs.stock)
+            gs.hands[i] = dealtHand
+            i += 1
+        }
+        print(DeckBuilder().report(fromPile: gs.hands[0], hashedToDeck: gs.deck))
+        print(DeckBuilder().report(fromPile: gs.hands[1], hashedToDeck: gs.deck))
+    }
+    // turn structure (including changing active player)
+    func advanceTurn(ofGameState gameState: inout GameState) {
+        let nextPlayerIndex = gameState.activePlayer + 1
+        gameState.activePlayer = (nextPlayerIndex >= gameState.players ? nextPlayerIndex :  0)
+        // draw cards
+    }
+}
+
+let gh = GameHandlerForDraw5Poker()
