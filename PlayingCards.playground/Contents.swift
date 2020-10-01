@@ -20,7 +20,7 @@ struct GameState {
     // let cardStandard: CardStandard // enum type declaration for type of card
     
     var stock: [Int]
-    var hand: [Int]
+    var hands: [[Int]]
     var discardPile: [Int]
     var revealedCards: [Int]
 }
@@ -115,8 +115,8 @@ class DeckBuilder {
     }
     
     // TODO: Handle Error case for drawing from an empty stock
-    func draw(thisManyCards number: Int, toHand hand: inout [Int], fromStock stock: inout [Int]) {
-        guard let dealtCard = stock.popLast() else { return }
+    func draw(thisManyCards number: Int, toHand hand: inout [Int], fromPile pile: inout [Int]) {
+        guard let dealtCard = pile.popLast() else { return }
         hand.append(dealtCard)
     }
     
@@ -251,8 +251,11 @@ class GameEnvironment {
     func setup(numberOfPlayers players: Int) {
         let standardDeck = DeckBuilder().constructDeck()
         var shuffledStock = DeckBuilder().randomize()
-        gameState = GameState(players: players, deck: standardDeck, stock: shuffledStock, hand: [Int()], discardPile: [Int](), revealedCards: [Int]())
-        guard let gameState = gameState else { return }
+        var handsConfigured = [[Int()]]
+        let dealtHand = DeckBuilder().deal(handOf: 5, fromStock: &shuffledStock)
+        handsConfigured[0] = dealtHand
+        gameState = GameState(players: players, deck: standardDeck, stock: shuffledStock, hands: handsConfigured, discardPile: [Int](), revealedCards: [Int]())
+        guard var gameState = gameState else { return }
         printAllZones(ofGameState: gameState)
 //        DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
     }
@@ -290,9 +293,9 @@ class GameEnvironment {
     
     // MARK: - Check GameState values
     
-    func printHand(ofGameState gameState: GameState) {
+    func printHand(ofPlayer player: Int, ofGameState gameState: GameState) {
         Swift.print("Hand:")
-        Swift.print(gameState.hand)
+        Swift.print(gameState.hands[player])
     }
     
     func printStock(ofGameState gameState: GameState) {
@@ -307,7 +310,7 @@ class GameEnvironment {
     
     func printAllZones(ofGameState gameState: GameState) {
         print("Hand:")
-        print(DeckBuilder().report(fromPile: gameState.hand, hashedToDeck: gameState.deck))
+        print(DeckBuilder().report(fromPile: gameState.hands[0], hashedToDeck: gameState.deck))
         print("DiscardPile:")
         print(DeckBuilder().report(fromPile: gameState.discardPile, hashedToDeck: gameState.deck))
         print("Stock:")
@@ -323,8 +326,10 @@ class GameEnvironment {
             checkDeck.update(with: i)
         }
         // TODO: Handling multiple players' hands
-        for i in 0..<gameState.hand.count {
-            checkDeck.remove(gameState.hand[i])
+        for i in 0..<gameState.players {
+            for j in 0..<gameState.hands[i].count {
+                checkDeck.remove(gameState.hands[i][j])
+            }
         }
         for i in 0..<gameState.stock.count {
             checkDeck.remove(gameState.stock[i])
@@ -341,15 +346,15 @@ class GameEnvironment {
         let deckBuilder = DeckBuilder()
         guard var gameState = gameState else { return }
         var hand = deckBuilder.deal(handOf: 5, fromStock: &gameState.stock)
-        gameState.hand = hand
-        deckBuilder.report(fromPile: gameState.hand, hashedToDeck: gameState.deck)
-        printHand(ofGameState: gameState)
-        deckBuilder.draw(thisManyCards: 1, toHand: &gameState.hand, fromStock: &gameState.stock)
-        printHand(ofGameState: gameState)
-        deckBuilder.draw(thisManyCards: 2, toHand: &gameState.hand, fromStock: &gameState.stock)
-        printHand(ofGameState: gameState)
-        deckBuilder.discard(cardWithLocalID: 0, fromHand: &gameState.hand, toDiscardPile: &gameState.discardPile)
-        printHand(ofGameState: gameState)
+        gameState.hands[0] = hand
+        deckBuilder.report(fromPile: gameState.hands[0], hashedToDeck: gameState.deck)
+        printHand(ofPlayer: 0, ofGameState: gameState)
+        deckBuilder.draw(thisManyCards: 1, toHand: &gameState.hands[0], fromPile: &gameState.stock)
+        printHand(ofPlayer: 0, ofGameState: gameState)
+        deckBuilder.draw(thisManyCards: 2, toHand: &gameState.hands[0], fromPile: &gameState.stock)
+        printHand(ofPlayer: 0, ofGameState: gameState)
+        deckBuilder.discard(cardWithLocalID: 0, fromHand: &gameState.hands[0], toDiscardPile: &gameState.discardPile)
+        printHand(ofPlayer: 0, ofGameState: gameState)
         printDiscardPile(ofGameState: gameState)
         printStock(ofGameState: gameState)
         printAllZones(ofGameState: gameState)
