@@ -126,6 +126,11 @@ class DeckBuilder {
         return newHand
     }
     
+    ///For disagnostic purposes only
+    func draw(cardWithID id: Int, intoHand hand: inout [Int], fromStock stock: inout [Int]) {
+        
+    }
+    
     // TODO: Handle Error case for drawing from an empty stock
     func draw(thisManyCards number: Int, toHand hand: inout [Int], fromPile pile: inout [Int]) {
         guard let dealtCard = pile.popLast() else { return }
@@ -443,3 +448,60 @@ class GameHandlerForDraw5Poker {
 
 let gh = GameHandlerForDraw5Poker()
 
+func isFlush(hand: [Int], fromDeck deck: DeckStandard) -> Bool {
+    let heldSuit = deck[hand[0]]!.suit
+    for id in hand {
+        if deck[id]!.suit != heldSuit {
+            return false
+        }
+    }
+    return true
+}
+
+func score(hand: [Int]) -> Int {
+    
+    let deck = DeckBuilder().constructDeck()
+    
+    var score = 0
+    // aliases for scores
+    
+    let flushStatus = isFlush(hand: hand, fromDeck: deck)
+    
+    for id in hand {
+        // check royal flush dictionaries
+        // check for flush (if any do not match the first card, fall through)
+        // check array for ranks adjacent; if none present, fall through
+        // separate check left and check right algorithms; run one at a time and if the ticker reaches five, it's a straight
+        // keep the ticker and run the other one
+        // if it doesn't reach five but has run five times, fall throuvh
+        // run check for pairs+ first before straights (disqualifies runs) ... under current rules, cardIDs are 13 apart for same rank, and could be checked this way. however, could still find deck[cardID].rank super fast
+        
+    }
+    
+    return score
+}
+
+func tenderCard(fromID id: Int, inDeck deck: DeckStandard) -> PlayingCard {
+    return deck[id]!
+}
+
+func isStraight(handIDs hand: [Int], fromDeck deck: DeckStandard) -> Bool {
+    // assume the hand has been vetted for doubles and there aren't any
+    var rankedHand: [PlayingCard] = []
+    for id in hand {
+        let card = tenderCard(fromID: id, inDeck: deck)
+        rankedHand.append(card)
+    }
+    rankedHand.sort(by: { $0.value < $1.value })
+    
+    if rankedHand[0].value == 1 && rankedHand[1].value == 10 {
+        return true
+    } else if rankedHand[4].value > rankedHand[0].value + 4 {
+        return false
+    }
+    return true
+}
+
+var stock = DeckBuilder().randomize()
+let hand1 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
+let hand2 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
