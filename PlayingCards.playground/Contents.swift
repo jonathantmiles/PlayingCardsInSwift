@@ -171,6 +171,14 @@ class DeckBuilder {
         return deck.count
     }
     
+    func findIDsFor(cardsWithReports reports: [String], inDeck deck: DeckStandard) -> [Int] {
+        var foundIDs: [Int] = []
+        for i in 0..<reports.count {
+            foundIDs.append(findCardIDMatching(report: reports[i], inDeck: deck))
+        }
+        return foundIDs
+    }
+    
     // TODO: Handle Error case for drawing from an empty stock
     func draw(thisManyCards number: Int, toHand hand: inout [Int], fromPile pile: inout [Int]) {
         guard let dealtCard = pile.popLast() else { return }
@@ -486,7 +494,7 @@ class GameHandlerForDraw5Poker {
     }
 }
 
-let gh = GameHandlerForDraw5Poker()
+//let gh = GameHandlerForDraw5Poker()
 
 func isFlush(hand: [Int], fromDeck deck: DeckStandard) -> Bool {
     let heldSuit = deck[hand[0]]!.suit
@@ -494,6 +502,23 @@ func isFlush(hand: [Int], fromDeck deck: DeckStandard) -> Bool {
         if deck[id]!.suit != heldSuit {
             return false
         }
+    }
+    return true
+}
+
+func isStraight(handIDs hand: [Int], fromDeck deck: DeckStandard) -> Bool {
+    // assume the hand has been vetted for doubles and there aren't any
+    var rankedHand: [PlayingCard] = []
+    for id in hand {
+        let card = deck[id]!
+        rankedHand.append(card)
+    }
+    rankedHand.sort(by: { $0.value < $1.value })
+    
+    if rankedHand[0].value == 1 && rankedHand[1].value == 10 {
+        return true
+    } else if rankedHand[4].value > rankedHand[0].value + 4 {
+        return false
     }
     return true
 }
@@ -506,6 +531,7 @@ func score(hand: [Int]) -> Int {
     // aliases for scores
     
     let flushStatus = isFlush(hand: hand, fromDeck: deck)
+    let straightStatus = isStraight(handIDs: hand, fromDeck: deck)
     
     for id in hand {
         // check royal flush dictionaries
@@ -521,32 +547,22 @@ func score(hand: [Int]) -> Int {
     return score
 }
 
-func tenderCard(fromID id: Int, inDeck deck: DeckStandard) -> PlayingCard {
-    return deck[id]!
-}
 
-func isStraight(handIDs hand: [Int], fromDeck deck: DeckStandard) -> Bool {
-    // assume the hand has been vetted for doubles and there aren't any
-    var rankedHand: [PlayingCard] = []
-    for id in hand {
-        let card = tenderCard(fromID: id, inDeck: deck)
-        rankedHand.append(card)
-    }
-    rankedHand.sort(by: { $0.value < $1.value })
-    
-    if rankedHand[0].value == 1 && rankedHand[1].value == 10 {
-        return true
-    } else if rankedHand[4].value > rankedHand[0].value + 4 {
-        return false
-    }
-    return true
-}
 
 //var stock = DeckBuilder().randomize()
 //let hand1 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
 //let hand2 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
 
-let sd = DeckBuilder().constructDeck()
-let foundID = DeckBuilder().findCardIDMatching(report: "JH", inDeck: sd)
-print(foundID)
-print(sd[foundID]!.report)
+//let sd = DeckBuilder().constructDeck()
+
+//let foundID = DeckBuilder().findCardIDMatching(report: "JH", inDeck: sd)
+//print(foundID)
+//print(sd[foundID]!.report)
+//
+//let straightHand = ["2S", "3D", "AC", "4S", "5H"]
+//let handIDs = DeckBuilder().findIDsFor(cardsWithReports: straightHand, inDeck: sd)
+//print(handIDs)
+//print(isStraight(handIDs: handIDs, fromDeck: sd))
+//let aceHigh = ["AC", "10H", "3S", "7H", "9H"]
+//let handIDs2 = DeckBuilder().findIDsFor(cardsWithReports: aceHigh, inDeck: sd)
+//print(isStraight(handIDs: handIDs2, fromDeck: sd))
