@@ -127,8 +127,48 @@ class DeckBuilder {
     }
     
     ///For disagnostic purposes only
-    func draw(cardWithID id: Int, intoHand hand: inout [Int], fromStock stock: inout [Int]) {
+    func draw(cardWithID id: Int, intoHand hand: inout [Int], fromPile pile: inout [Int]) {
+        if !pile.contains(id) {
+            return
+        }
+        var ticker = 0
+        if pile[ticker] == id {
+            pile.remove(at: ticker)
+            hand.append(id)
+        } else {
+            ticker += 1
+        }
+    }
+    
+    func findCardIDMatching(report: String, inDeck deck: DeckStandard) -> Int {
+        var rank = report
+        let suit = rank.removeLast()
+        var index = 0
         
+        switch rank {
+        case "A":
+            index = 0
+        case "J":
+            index = 10
+        case "Q":
+            index = 11
+        case "K":
+            index = 12
+        default:
+            if let r = Int(rank) {
+                index = r - 1
+            }
+        }
+        
+        while index < deck.count {
+            if deck[index]!.suit == suit {
+                return deck[index]!.uniqueIndex
+            } else {
+                index += 13
+            }
+        }
+        
+        return deck.count
     }
     
     // TODO: Handle Error case for drawing from an empty stock
@@ -502,6 +542,11 @@ func isStraight(handIDs hand: [Int], fromDeck deck: DeckStandard) -> Bool {
     return true
 }
 
-var stock = DeckBuilder().randomize()
-let hand1 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
-let hand2 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
+//var stock = DeckBuilder().randomize()
+//let hand1 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
+//let hand2 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
+
+let sd = DeckBuilder().constructDeck()
+let foundID = DeckBuilder().findCardIDMatching(report: "JH", inDeck: sd)
+print(foundID)
+print(sd[foundID]!.report)
