@@ -2,50 +2,83 @@ import UIKit
 
 // MARK: - Models & Types
 typealias DeckStandard = [Int : PlayingCard]
+typealias Pile = [String]
 
 struct PlayingCard: Hashable {
     let value: Int
     let rank: String
     let suit: Character
     let isFace: Bool
-    let uniqueIndex: Int
+    let rawID: Int
     var report: String { rank + String(suit) }
 }
+
+struct Deck {
+    var lookupByReport: [String : PlayingCard]
+    var lookupByID: [Int : PlayingCard]
+    
+    let rawDeckSize: Int
+    var deckSize: Int { lookupByID.count }
+    
+    let deckType: DeckType
+}
+
+struct Player {
+    var hand: Pile
+    var stock: Pile
+    var discardPile: Pile
+    var tableau: [Pile]
+    var score: Int
+}
+//
+//struct GameState {
+//    var players: [Player]
+//    var numOfPlayers: Int
+//
+//    var deck: DeckStandard
+////    var ruleset: RulesToken
+//    var stock: Pile
+//    var discardPile: Pile
+//    var tableau: [Pile]
+//}
 
 // [[Int]] players hands, [Int] players (for maintaining consistency in players through indexing fo hands through here
 
 struct GameState {
-    let players: Int
+    var players: [Player]
+    var numOfPlayers: Int
     let deck: DeckStandard
     // let cardStandard: CardStandard // enum type declaration for type of card
     
     var activePlayer: Int
-    var stock: [Int]
-    var hands: [[Int]]
-    var discardPile: [Int]
-    var revealedCards: [Int]
+    var stock: Pile
+//    var hands: [[Int]]
+    var discardPile: Pile
+    var revealedCards: Pile
+    var tableau: [Pile]
     
-    var cardsNotInStock: Set<Int> {
-        var piles: Set<Int> = []
-        var i = 0
-        while i < players {
-            piles.formUnion(Set(hands[i]))
-            i += 1
-        }
-        piles.formUnion(Set(discardPile))
-        return piles
-    }
+//    var cardsNotInStock: Set<Int> {
+//        var piles: Set<Int> = []
+//        var i = 0
+//        while i < numOfPlayers {
+//            piles.formUnion(Set(players[i].hand))
+//            i += 1
+//        }
+//        piles.formUnion(Set(discardPile))
+//        return piles
+//    }
 }
 
 
 ///For distinguishing between types of evaluation or initial values; "tarot" currently deprecated
 enum DeckType: String {
-    case conventional, tarot
+    case conventional, tarot, conventionalWithJokers, pinochle, euchre, phase10
 }
 
 // MARK: - Model Controllers
 
 class DeckBuilder {
+    
     func constructDeck() -> DeckStandard {
         var deckAccumulator = DeckStandard()
         
@@ -553,7 +586,7 @@ func score(hand: [Int]) -> Int {
 //let hand1 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
 //let hand2 = DeckBuilder().deal(handOf: 5, fromStock: &stock)
 
-//let sd = DeckBuilder().constructDeck()
+let sd = DeckBuilder().constructDeck()
 
 //let foundID = DeckBuilder().findCardIDMatching(report: "JH", inDeck: sd)
 //print(foundID)
@@ -566,3 +599,7 @@ func score(hand: [Int]) -> Int {
 //let aceHigh = ["AC", "10H", "3S", "7H", "9H"]
 //let handIDs2 = DeckBuilder().findIDsFor(cardsWithReports: aceHigh, inDeck: sd)
 //print(isStraight(handIDs: handIDs2, fromDeck: sd))
+
+let flushHand = ["3H", "6H", "9H", "QH", "AH"]
+let handIDs = DeckBuilder().findIDsFor(cardsWithReports: flushHand, inDeck: sd)
+isFlush(hand: handIDs, fromDeck: sd)
